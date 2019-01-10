@@ -11,11 +11,13 @@ Customizable bouncy drawer for React Native
 Installation
 ---
 ```javascript
-$ npm install react-native-bouncy-drawer --save
+$ npm install kulbhushan-ucreate/react-native-bouncy-drawer --save
+OR
+yarn add kulbhushan-ucreate/react-native-bouncy-drawer
 ```
 then
 ```javascript
-import BouncyDrawer from 'react-native-bouncy-drawer'
+import BouncyDrawer from 'kulbhushan-ucreate/react-native-bouncy-drawer'
 
 /*...*/
 
