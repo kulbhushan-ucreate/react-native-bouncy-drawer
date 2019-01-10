@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import {
     Animated,
     Dimensions,
@@ -10,22 +10,18 @@ import View from 'react-native-view'
 import PropTypes from 'prop-types';
 import MAIcon from 'react-native-vector-icons/MaterialIcons'
 const { width, height } = Dimensions.get('window')
-
 const HEADER_HEIGHT = Platform.select({
     ios: 60,
     android: 50
 })
-
-export default class Header extends Component {
-
-    state = {
+export default class Header extends React.PureComponent {
+    constructor(props){
+        super(props);
+        this.rotation = new Animated.Value(-90);
+        this.state = {
         open: false
+        }
     }
-
-    componentWillMount() {
-        this.rotation = new Animated.Value(-90)
-    }
-
     onToggle = () => {
         const { open } = this.state
         if (!open) {
@@ -38,7 +34,6 @@ export default class Header extends Component {
             this.close()
         }
     }
-
     open = () => {
         const { openFriction, openTension, openSpeed, openBounciness } = this.props
         const rotationAnimation = Animated.spring(this.rotation, {
@@ -51,7 +46,6 @@ export default class Header extends Component {
         })
         rotationAnimation.start(() => this.props.didOpen())
     }
-
     close = () => {
         const { closeFriction, closeTension, closeSpeed, closeBounciness } = this.props
         const rotationAnimation = Animated.spring(this.rotation, {
@@ -68,7 +62,6 @@ export default class Header extends Component {
             })
         })
     }
-
     render() {
         const { open } = this.state
         const { headerHeight, openButtonStyle, closeButtonStyle, openedHeaderStyle, closedHeaderStyle,
@@ -86,7 +79,6 @@ export default class Header extends Component {
             inputRange: [-90, 0],
             outputRange: [-width - headerHeight / 2, -width - headerHeight]
         })
-
         const openButtonContent = <MAIcon name="menu" size={defaultOpenButtonIconSize} color={defaultOpenButtonIconColor} />
         const closeButtonContent = <MAIcon name="close" size={defaultCloseButtonIconSize} color={defaultCloseButtonIconColor} />
         const openButton = (
@@ -133,7 +125,6 @@ export default class Header extends Component {
         )
     }
 }
-
 const styles = {
     closedHeader: {
         shadowOpacity: 1,
@@ -143,7 +134,6 @@ const styles = {
         backgroundColor: '#fff',
     },
 }
-
 Header.propTypes = {
     headerHeight: PropTypes.number,
     renderContent: PropTypes.func,
@@ -171,7 +161,6 @@ Header.propTypes = {
     openButtonPosition: PropTypes.oneOf(['left', 'right']),
     closeButtonPosition: PropTypes.oneOf(['left', 'right']),
 };
-
 Header.defaultProps = {
     headerHeight: HEADER_HEIGHT,
     renderContent: () => null,
