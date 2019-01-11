@@ -24,6 +24,7 @@ export default class Header extends React.PureComponent {
         this.rotation = new Animated.Value(-90);
         this.state = {
         open: false,
+        buttonDisabled: false,
         prevoiusSelectedIndex: 0,
         drawerData: [],
         }
@@ -31,11 +32,12 @@ export default class Header extends React.PureComponent {
     onToggle = () => {
         const { open } = this.state
         if (!open) {
-            this.setState(() => ({ open: true }), () => {
+            this.setState(() => ({ open: true, buttonDisabled: true }), () => {
                 this.props.willOpen()
                 this.open()
             })
         } else {
+            this.setState({buttonDisabled: true});
             this.props.willClose()
             this.close()
         }
@@ -50,7 +52,7 @@ export default class Header extends React.PureComponent {
             speed: openSpeed,
             bounciness: openBounciness
         })
-        rotationAnimation.start(() => this.props.didOpen())
+        rotationAnimation.start(() => { () => this.setState({buttonDisabled: false}),() => this.props.didOpen()})
     }
     close = () => {
         const { closeFriction, closeTension, closeSpeed, closeBounciness } = this.props
@@ -63,7 +65,7 @@ export default class Header extends React.PureComponent {
             bounciness: closeBounciness
         })
         rotationAnimation.start(() => {
-            this.setState(() => ({ open: false }), () => {
+            this.setState(() => ({ open: false, buttonDisabled: false }), () => {
                 this.props.didClose()
             })
         })
@@ -83,11 +85,13 @@ export default class Header extends React.PureComponent {
     }
     componentDidMount(){
         const { renderContent } = this.props;
+        if(Array.isArray(renderContent)){
         const drawerData = renderContent.map((item,index) => {
             if (index === 0) return { ...item, isSelected: true };
             return { ...item, isSelected: false };
         });
         this.setState({ drawerData });
+    }
     }
     renderItem = ({ item }) => {
        return <TouchableOpacity style={{height: 45, flex: 1}} onPress={() => this.onPressItem(item)}>
@@ -97,7 +101,7 @@ export default class Header extends React.PureComponent {
         </View>
         </TouchableOpacity>
     }
-    renderContent = () => {
+    renderDrawerContent = () => {
         return <View style={{flex: 1,alignItems: 'center', backgroundColor: '#3F3C4C'}}>
         <View style={{flex: 1,alignItems: 'stretch',justifyContent:'center', position: 'absolute', top: 120 }}>
           <FlatList 
@@ -108,6 +112,13 @@ export default class Header extends React.PureComponent {
           />
         </View>
       </View>
+    }
+    checkCustomizationDrawer = () => {
+        const { renderContent } = this.props;
+        if(Array.isArray(renderContent)){
+        return renderContent.length > 0 ? this.renderDrawerContent() : null
+        }
+        return renderContent ? renderContent() : null;
     }
     render() {
         const { open } = this.state
@@ -130,13 +141,13 @@ export default class Header extends React.PureComponent {
         const closeButtonContent = <MAIcon name="close" size={defaultCloseButtonIconSize} color={defaultCloseButtonIconColor} />
         const openButton = (
             <View style={{ ...openButtonStyle, position: 'absolute', left: 8, top: openButtonPosition == 'left' ? 14 : width - 40, transform: [{ rotate: '90deg' }] }}>
-                <TouchableOpacity onPress={this.onToggle}>
+                <TouchableOpacity disabled={this.state.buttonDisabled} onPress={this.onToggle}>
                     {this.props.openButtonContent || openButtonContent}
                 </TouchableOpacity>
             </View>
         )
         const closeButton = (
-            <TouchableOpacity onPress={this.onToggle} style={{ ...closeButtonStyle, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
+            <TouchableOpacity  onPress={this.onToggle} style={{ ...closeButtonStyle, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
                 {this.props.closeButtonContent || closeButtonContent}
             </TouchableOpacity>
         )
@@ -158,12 +169,12 @@ export default class Header extends React.PureComponent {
                             </View>
                         </View>
                         <View style={{ flex: 1, backgroundColor: "#fff" }}>
-                            <View style={{ height: headerHeight, flexDirection: 'row', ...openedHeaderStyle, alignItems: 'center' }}>
+                            <View style={{ flex: 1 }}>
+                                {this.checkCustomizationDrawer()}
+                            </View>
+                            <View style={{ height: headerHeight, position: 'absolute',flexDirection: 'row', ...openedHeaderStyle, alignItems: 'center' }}>
                                 {closeButton}
                                 {openedHeaderContent}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                {this.props.renderContent.length > 0 ? this.renderContent() : null}
                             </View>
                         </View>
                     </View>
@@ -184,11 +195,11 @@ const styles = {
 Header.propTypes = {
     headerHeight: PropTypes.number,
     onPressDrawerItem: PropTypes.func,
-    renderContent: PropTypes.arrayOf(PropTypes.shape({
+    renderContent: PropTypes.oneOfType([PropTypes.func,PropTypes.arrayOf(PropTypes.shape({
         text: PropTypes.string,
         color: PropTypes.string,
         iconName: PropTypes.string,
-    })),
+    })), PropTypes.func]),
     openButtonContent: PropTypes.element,
     closeButtonContent: PropTypes.element,
     openButtonStyle: PropTypes.object,
@@ -217,7 +228,6 @@ Header.propTypes = {
 };
 Header.defaultProps = {
     headerHeight: HEADER_HEIGHT,
-    renderContent: [],
     onPressDrawerItem: () => {},
     openButtonStyle: {},
     closeButtonStyle: {},
