@@ -1,17 +1,21 @@
-import React from 'react'
+import React from 'react';
 import {
     Animated,
     Dimensions,
     TouchableOpacity,
     Platform,
+    View,
+    FlatList,
     Text
-} from 'react-native'
-import View from 'react-native-view'
+} from 'react-native';
 import PropTypes from 'prop-types';
-import MAIcon from 'react-native-vector-icons/MaterialIcons'
+import MAIcon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {getStatusBarHeight} from './IPhoneXHelper';
+import { isIphoneX } from '../../src/utilities/IPhoneXHelper';
 const { width, height } = Dimensions.get('window')
 const HEADER_HEIGHT = Platform.select({
-    ios: 60,
+    ios:  isIphoneX() ? 80 : 60,
     android: 50
 })
 export default class Header extends React.PureComponent {
@@ -19,7 +23,9 @@ export default class Header extends React.PureComponent {
         super(props);
         this.rotation = new Animated.Value(-90);
         this.state = {
-        open: false
+        open: false,
+        prevoiusSelectedIndex: 0,
+        drawerData: [],
         }
     }
     onToggle = () => {
@@ -62,6 +68,47 @@ export default class Header extends React.PureComponent {
             })
         })
     }
+    onPressItem = (item) => {
+        const { drawerData, prevoiusSelectedIndex } = this.state;
+        const index = drawerData.findIndex((drawerItem) => (drawerItem.text === item.text));
+        const selectedItem = drawerData[index];
+        const previousSelectedItem = drawerData[prevoiusSelectedIndex];
+        if (index > -1 && !selectedItem.isSelected) {
+        previousSelectedItem.isSelected = false;   
+        selectedItem.isSelected = true;
+        }
+        this.setState({drawerData, prevoiusSelectedIndex: index});
+        this.onToggle();
+        this.props.onPressDrawerItem(item);
+    }
+    componentDidMount(){
+        const { renderContent } = this.props;
+        const drawerData = renderContent.map((item,index) => {
+            if (index === 0) return { ...item, isSelected: true };
+            return { ...item, isSelected: false };
+        });
+        this.setState({ drawerData });
+    }
+    renderItem = ({ item }) => {
+       return <TouchableOpacity style={{height: 45, flex: 1}} onPress={() => this.onPressItem(item)}>
+     <View style={{height: 45, flex: 1,flexDirection: 'row',justifyContent: 'flex-start', alignItems: 'center'}}>
+            <MaterialIcons name={item.iconName} color={item.isSelected ? this.props.selectedItemTextColor :this.props.unselectedItemTextColor } size={26}/>
+          <Text style={{ fontSize: 16, color: item.isSelected ? this.props.selectedItemTextColor :this.props.unselectedItemTextColor, fontWeight: '600', paddingLeft: 15 }}>{item.text}</Text>
+        </View>
+        </TouchableOpacity>
+    }
+    renderContent = () => {
+        return <View style={{flex: 1,alignItems: 'center', backgroundColor: '#3F3C4C'}}>
+        <View style={{flex: 1,alignItems: 'stretch',justifyContent:'center', position: 'absolute', top: 120 }}>
+          <FlatList 
+            extraData={this.state}
+            data={this.state.drawerData}
+            renderItem={this.renderItem}
+            keyExtractor={(item) => item.text}
+          />
+        </View>
+      </View>
+    }
     render() {
         const { open } = this.state
         const { headerHeight, openButtonStyle, closeButtonStyle, openedHeaderStyle, closedHeaderStyle,
@@ -89,20 +136,20 @@ export default class Header extends React.PureComponent {
             </View>
         )
         const closeButton = (
-            <TouchableOpacity onPress={this.onToggle} style={{ ...closeButtonStyle, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, marginTop: Platform.OS == 'ios' ? 28 : 18 }}>
+            <TouchableOpacity onPress={this.onToggle} style={{ ...closeButtonStyle, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
                 {this.props.closeButtonContent || closeButtonContent}
             </TouchableOpacity>
         )
         const titleComponent = title ? (
             <View style={{ transform: [{ rotate: '90deg' }] }}>
-                <Text style={{ fontSize: 18, color: '#000', ...titleStyle, width: width + headerHeight / 2, textAlign: 'center', marginTop: Platform.OS == 'ios' ? 15 : 5 }}>{title}</Text>
+                <Text style={{ fontSize: 18, color: '#000', ...titleStyle, width: width + headerHeight / 2, textAlign: 'center', paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 5 }}>{title}</Text>
             </View>
         ) : null
         return (
-            <Animated.View style={{ position: 'absolute', top: 0, left: 0, maxHeight: open ? height : headerHeight + 5, overflow: 'hidden' }}>
+            <Animated.View style={{ backgroundColor: 'transparent',position: 'absolute', top: 0, left: 0, maxHeight: open ? height : headerHeight + 5, overflow: 'hidden' }}>
                 <Animated.View style={{ height: height * 2 + headerHeight, width: width * 2 + headerHeight, transform: [{ translateY: paddingTop }, { translateX: paddingLeft }, { rotate: rotation }] }}>
                     <View style={{ flex: 1 }} />
-                    <View row style={{ flex: 1 }}>
+                    <View style={{ flex: 1, flexDirection: 'row' }}>
                         <View style={{ flex: 1 }} />
                         <View style={{ width: headerHeight }}>
                             <View style={{ ...styles.header, ...styles.closedHeader, ...closedHeaderStyle, flex: 1, height: width }}>
@@ -111,12 +158,12 @@ export default class Header extends React.PureComponent {
                             </View>
                         </View>
                         <View style={{ flex: 1, backgroundColor: "#fff" }}>
-                            <View row style={{ height: headerHeight, ...openedHeaderStyle }}>
+                            <View style={{ height: headerHeight, flexDirection: 'row', ...openedHeaderStyle, alignItems: 'center' }}>
                                 {closeButton}
                                 {openedHeaderContent}
                             </View>
                             <View style={{ flex: 1 }}>
-                                {this.props.renderContent ? this.props.renderContent() : null}
+                                {this.props.renderContent.length > 0 ? this.renderContent() : null}
                             </View>
                         </View>
                     </View>
@@ -136,7 +183,12 @@ const styles = {
 }
 Header.propTypes = {
     headerHeight: PropTypes.number,
-    renderContent: PropTypes.func,
+    onPressDrawerItem: PropTypes.func,
+    renderContent: PropTypes.arrayOf(PropTypes.shape({
+        text: PropTypes.string,
+        color: PropTypes.string,
+        iconName: PropTypes.string,
+    })),
     openButtonContent: PropTypes.element,
     closeButtonContent: PropTypes.element,
     openButtonStyle: PropTypes.object,
@@ -157,15 +209,20 @@ Header.propTypes = {
     closeFriction: PropTypes.number,
     closeTension: PropTypes.number,
     closeSpeed: PropTypes.number,
+    selectedItemTextColor: PropTypes.string,
+    unselectedItemTextColor: PropTypes.string,
     closeBounciness: PropTypes.number,
     openButtonPosition: PropTypes.oneOf(['left', 'right']),
     closeButtonPosition: PropTypes.oneOf(['left', 'right']),
 };
 Header.defaultProps = {
     headerHeight: HEADER_HEIGHT,
-    renderContent: () => null,
+    renderContent: [],
+    onPressDrawerItem: () => {},
     openButtonStyle: {},
     closeButtonStyle: {},
+    selectedItemTextColor: '#2FCACE',
+    unselectedItemTextColor: '#fff',
     defaultOpenButtonIconColor: "#373737",
     defaultCloseButtonIconColor: "#000",
     defaultOpenButtonIconSize: 26,
