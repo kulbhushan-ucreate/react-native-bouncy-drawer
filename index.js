@@ -140,7 +140,7 @@ export default class Header extends React.PureComponent {
         const openButtonContent = <MAIcon name="menu" size={defaultOpenButtonIconSize} color={defaultOpenButtonIconColor} />
         const closeButtonContent = <MAIcon name="close" size={defaultCloseButtonIconSize} color={defaultCloseButtonIconColor} />
         const openButton = (
-            <View style={{ ...openButtonStyle, position: 'absolute', left: 8, top: openButtonPosition == 'left' ? 14 : width - 40, transform: [{ rotate: '90deg' }] }}>
+            <View style={{ ...openButtonStyle, position: 'absolute', left: Platform.OS === 'ios' ? 8 : 11, top: openButtonPosition == 'left' ? 14 : width - 40, transform: [{ rotate: '90deg' }] }}>
                 <TouchableOpacity disabled={this.state.buttonDisabled} onPress={this.onToggle}>
                     {this.props.openButtonContent || openButtonContent}
                 </TouchableOpacity>
@@ -229,6 +229,10 @@ Header.propTypes = {
 Header.defaultProps = {
     headerHeight: HEADER_HEIGHT,
     onPressDrawerItem: () => {},
+    willOpen: () => {},
+    didOpen: () => {},
+    willClose: () => {},
+    didClose: () => {},
     openButtonStyle: {},
     closeButtonStyle: {},
     selectedItemTextColor: '#2FCACE',
