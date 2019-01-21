@@ -147,13 +147,13 @@ export default class Header extends React.PureComponent {
             </View>
         )
         const closeButton = (
-            <TouchableOpacity  onPress={this.onToggle} style={{ ...closeButtonStyle, padding: 10, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, marginTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
+            <TouchableOpacity  onPress={this.onToggle} style={{ ...closeButtonStyle, padding: 10, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, marginTop: isIphoneX() ? getStatusBarHeight() : 18 }}>
                 {this.props.closeButtonContent || closeButtonContent}
             </TouchableOpacity>
         )
         const titleComponent = title ? (
             <View style={{ transform: [{ rotate: '90deg' }] }}>
-                <Text style={{ fontSize: 18, color: '#000', ...titleStyle, width: width + headerHeight / 2, textAlign: 'center', paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 5 }}>{title}</Text>
+                <Text style={{ fontSize: 18, color: '#000', ...titleStyle, width: width + headerHeight / 2, textAlign: 'center', paddingTop: isIphoneX() ? getStatusBarHeight() : 5 }}>{title}</Text>
             </View>
         ) : null
         return (
