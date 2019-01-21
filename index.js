@@ -140,14 +140,14 @@ export default class Header extends React.PureComponent {
         const openButtonContent = <MAIcon name="menu" size={defaultOpenButtonIconSize} color={defaultOpenButtonIconColor} />
         const closeButtonContent = <MAIcon name="close" size={defaultCloseButtonIconSize} color={defaultCloseButtonIconColor} />
         const openButton = (
-            <View style={{ ...openButtonStyle, position: 'absolute', left: Platform.OS === 'ios' ? 8 : 11, top: openButtonPosition == 'left' ? 14 : width - 40, transform: [{ rotate: '90deg' }] }}>
-                <TouchableOpacity disabled={this.state.buttonDisabled} onPress={this.onToggle}>
+            <View style={{ ...openButtonStyle, position: 'absolute', transform: [{ rotate: '90deg' }] }}>
+                <TouchableOpacity style={{ padding: 12 }} disabled={this.state.buttonDisabled} onPress={this.onToggle}>
                     {this.props.openButtonContent || openButtonContent}
                 </TouchableOpacity>
             </View>
         )
         const closeButton = (
-            <TouchableOpacity  onPress={this.onToggle} style={{ ...closeButtonStyle, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, paddingTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
+            <TouchableOpacity  onPress={this.onToggle} style={{ ...closeButtonStyle, padding: 10, marginLeft: closeButtonPosition == 'left' ? 14 : width - 42, marginTop: Platform.OS == 'ios' ? getStatusBarHeight() : 18 }}>
                 {this.props.closeButtonContent || closeButtonContent}
             </TouchableOpacity>
         )
